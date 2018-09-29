@@ -31,8 +31,8 @@
           </td>
           <td class="text-xs-center">{{ props.item.letter }}</td>
           <td class="justify-center">
-            <v-btn color="info">编辑</v-btn>
-            <v-btn color="warning">删除</v-btn>
+            <v-btn color="info" @click="editBrand(props.item)">编辑</v-btn>
+            <v-btn color="warning" @click="deleteBrand(props.item)">删除</v-btn>
           </td>
         </template>
       </v-data-table>
@@ -44,7 +44,7 @@
       <v-card>
         <!-- 对话框的标题:dense:紧凑排布; dark:黑暗主题;  -->
         <v-toolbar dense dark color="primary">
-          <v-toolbar-title>新增品牌</v-toolbar-title>
+          <v-toolbar-title>{{isEdit ? "编辑" : "新增"}}品牌</v-toolbar-title>
           <v-spacer/>
           <!-- 关闭窗口的按钮 -->
           <v-btn icon @click="closeWindow"><v-icon>close</v-icon></v-btn>
@@ -53,7 +53,7 @@
         <!-- 对话框的正文,表单 -->
         <v-card-text class="px-5">
           <!-- 自定义的表单局部组件,绑定一个close方法,子组件提交保存成功后,关闭窗口 -->
-          <my-brand-form @close="closeWindow"/>
+          <my-brand-form @close="closeWindow" :oldBrand="oldBrand" :isEdit="isEdit"/>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -81,7 +81,9 @@
           {text:"首字母",align:"center",value:"letter",sortable:true},
           {text:"操作",align:"center",value:"id",sortable:false}
         ],
-        show:false       // 用来控制添加品牌的弹出窗的显示
+        show:false,       // 用来控制添加品牌的弹出窗的显示
+        oldBrand:{},       // 即将被编辑的品牌数据
+        isEdit:false      // 是否是编辑,用来判断弹窗是用来编辑还是新增的
       }
     },
     methods:{
@@ -104,12 +106,55 @@
           })
 
       },
+      // 新增品牌方法
       addBrand(){
         this.show = true
+        // 将弹窗中的数据清空
+        this.oldBrand = null;
+        this.isEdit = false;
       },
 
+      // 编辑品牌方法
+      editBrand(oldBrand){
+        // 发送Ajax从后台获取分类信息,发送参数为当前brand的id
+        this.$http.get("/item/category/bid/" + oldBrand.id)
+        // 请求成功后的回调函数
+          .then(({data}) => {
+            // 修改标记
+            this.isEdit = true;
+            // 显示窗口
+            this.show = true;
+            // 获取要编辑的brand
+            this.oldBrand = oldBrand;
+            this.oldBrand.categories = data;
+          });
+
+      },
+
+      // 删除品牌方法
+      deleteBrand(oldBrand){
+        // 弹出确认框
+        this.$message.confirm("此操作将永久删除该品牌,是否继续?")
+          .then(() => {
+            // 发送异步请求去后台执行删除
+            this.$http.delete("/item/brand?bid=" + oldBrand.id)
+              .then(() => {
+                // 删除成功,然后刷新页面
+                this.$message.success("删除成功!");
+                this.getDataFromServer()
+              })
+          })
+          .catch(() => {
+            this.$message.info("删除已取消!");
+            this.getDataFromServer()
+          })
+
+      },
+
+      // 关闭弹窗方法
       closeWindow(){
         this.show = false;
+        this.dialog = false;
         // 优化一下,关闭窗口的同时刷新页面数据
         this.getDataFromServer();
       }

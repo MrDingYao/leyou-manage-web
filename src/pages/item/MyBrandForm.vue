@@ -12,7 +12,7 @@
       </v-flex>
       <v-flex>
         <v-upload v-model="brand.image"
-                  url="/upload"
+                  url="/upload/image"
                   :multiple="false"
                   :pic-width="250"
                   :pic-height="90"/>
@@ -27,10 +27,20 @@
     </v-layout>
   </v-form>
 </template>
-
+17940  1368
 <script>
   export default {
     name:"my-brand-form",
+    // 子组件中通过props定义oldBrand属性
+    props:{
+      oldBrand:{
+        type:Object
+      },
+      isEdit:{
+        type:Boolean,
+        default:false
+      }
+    },
     data(){
       return {
         valid:true,      // 表单校验结果的标记
@@ -64,7 +74,12 @@
           // 将输入的首字母转为大写
           params.letter = letter.toUpperCase();
           // 发送post请求将数据发送至后台,进行保存
-          this.$http.post("/item/brand",this.$qs.stringify(params))
+          //this.$http.post("/item/brand",this.$qs.stringify(params))
+          this.$http({
+            method:this.isEdit?"put":"post",    // 动态判断是编辑还是新增
+            url:"/item/brand",
+            data:this.$qs.stringify(params)
+          })
             .then(() => {
               // 关闭窗口,通过$emit()方法来调用父组件的close方法
               this.$emit("close");
@@ -80,6 +95,27 @@
         console.log(this.$qs)
       }
     },
+
+    watch:{
+      // 监控oldBrand的属性
+      oldBrand:{
+        handler(val){
+          if (val) {
+            // 选择复制传递过来的brand,直接修改会影响父组件的值
+            this.brand = Object.deepCopy(val);
+          }else {
+            // 为空,则初始化brand
+            this.brand = {
+              name:"",
+              letter:"",
+              image:"",
+              categories:[]
+            }
+          }
+        },
+        deep:true
+      }
+    }
 
   }
 </script>
