@@ -14,7 +14,7 @@
                @blur="afterEdit" @keydown.enter="afterEdit"/>
       </v-list-tile-content>
       <v-list-tile-action v-if="isEdit">
-        <v-btn icon @mouseover="c1='primary'" @mouseout="c1=''" :color="c1" @click.stop="addChild">
+        <v-btn icon @mouseover="c1='primary'" @mouseout="c1=''" :color="c1" @click.stop="addChildNew">
           <i class="el-icon-plus"/>
         </v-btn>
       </v-list-tile-action>
@@ -69,12 +69,14 @@
     },
     data: function () {
       return {
+        newNodeName:'新的节点',
         c1: '',
         c2: '',
         c3: '',
         isSelected: false,
         open:false,
-        beginEdit:false
+        beginEdit:false,
+        oldName:""
       }
     },
     watch:{
@@ -132,10 +134,23 @@
           console.log(e);
         });
       },
+      addChildNew:function(){
+        this.$message.prompt("请输入新的节点名称:").then(name => {
+          if (name) {
+            this.newNodeName = name;
+            this.addChild();
+          } else {
+            this.$message.error("分类名字不能为空")
+          }
+        }).catch(() => {
+          this.$message.info("新增分类已取消")
+        });
+      },
+
       addChild: function () {
         let child = {
           id: 0,
-          name: '新的节点',
+          name: this.newNodeName,
           parentId: this.model.id,
           isParent: false,
           sort:this.model.children? this.model.children.length + 1:1
@@ -161,25 +176,36 @@
         }
       },
       deleteChild: function () {
-        this.$message.confirm('此操作将永久删除数据，是否继续?', '提示', {
-          confirmButtonText: '确定删除',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          this.handleDelete(this.model.id);
-        }).catch(()=>{
-          this.$message.info('已取消删除');
-        })
-
+        // 先判断此节点是否为父节点，若是父节点，则不能被删除
+        if (this.model.isParent) {
+          this.$message.warning("当前分类含有子分类，不能直接被删除！");
+        } else {
+          this.$message.confirm('此操作将永久删除数据，是否继续?', '提示', {
+            confirmButtonText: '确定删除',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            this.handleDelete(this.model.id);
+          }).catch(()=>{
+            this.$message.info('已取消删除');
+          });
+        }
       },
       editChild() {
         this.beginEdit = true;
+        this.oldName = this.model.name;
         this.$nextTick(() => this.$refs[this.model.id].focus());
       },
       afterEdit() {
-        if (this.model.beginEdit) {
+        if (this.beginEdit) {
           this.beginEdit = false;
-          this.handleEdit(this.model.id, this.model.name);
+          if (this.model.name) {
+            this.handleEdit(this.model.id, this.model.name);
+          } else {
+            this.$message.error("分类名字不能为空");
+            this.model.name = this.oldName;
+          }
+
         }
       },
       handleAdd(node) {
@@ -189,6 +215,7 @@
         this.$emit("handleDelete", id);
       },
       handleEdit(id, name) {
+
         this.$emit("handleEdit", id, name)
       },
       handleClick(node) {

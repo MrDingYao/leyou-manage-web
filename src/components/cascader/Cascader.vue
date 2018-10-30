@@ -126,8 +126,8 @@
         })
       },
       remove(item) {
-        this.selected = this.selected.filter(o => o.value !== item.value)
-        this.$emit("input", this.transfer(this.selected))
+        this.selected = this.selected.filter(o => o.value !== item.value);
+        this.$emit("input", this.transfer(this.selected));
       },
       transfer(arr) {
         return arr.map(({label, value}) => {

@@ -14,7 +14,7 @@
         </select>
         <!-- Add subscript and superscript buttons -->
         <span class="ql-formats"><button class="ql-script" value="sub"></button></span>
-        <span class="ql-formats"><button class="ql-script" value="super"></button></button></span>
+        <span class="ql-formats"><button class="ql-script" value="super"></button></span>
         <span class="ql-formats"><button type="button" class="ql-bold"></button></span>
         <span class="ql-formats"><button type="button" class="ql-italic"></button></span>
         <span class="ql-formats"><button type="button" class="ql-blockquote"></button></span>
@@ -93,7 +93,7 @@
         this.$http.post(this.uploadUrl, data)
           .then(res => {
             if (res.data) {
-              this.editor.insertEmbed(self.editor.getSelection().index, 'image', res.data)
+              this.editor.insertEmbed(this.editor.getSelection().index, 'image', res.data)
             }
           })
       },
