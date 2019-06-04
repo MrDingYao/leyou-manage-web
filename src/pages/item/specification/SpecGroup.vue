@@ -8,7 +8,6 @@
     hide-actions
     class="elevation-0"
     v-show="groups.length"
-    no-data-text="你想要的，并不存在"
     >
       <template slot="items" slot-scope="props">
         <tr @click="selectGroup(props.item)">
@@ -116,8 +115,6 @@
             .then(({data}) => {
               if (data) {
                 this.groups = data;
-              } else {
-                this.groups = [];
               }
             })
             .catch(() => {
